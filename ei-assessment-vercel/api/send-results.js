@@ -26,11 +26,11 @@ module.exports = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
-    // Create transporter using SMTP2GO credentials from environment variables
+    // Create transporter using Brevo SMTP credentials from environment variables
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'mail.smtp2go.com',
-      port: parseInt(process.env.SMTP_PORT || '2525'),
-      secure: false, // Use TLS
+      host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false, // Use STARTTLS
       auth: {
         user: process.env.SMTP_USERNAME,
         pass: process.env.SMTP_PASSWORD
