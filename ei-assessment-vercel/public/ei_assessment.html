@@ -86,10 +86,8 @@
   <footer>Results will be emailed automatically to the admin when completed.</footer>
 
 <script>
-// CONFIGURATION - Update this URL after deploying to Vercel
-const API_ENDPOINT = 'https://ei-tool.vercel.app/api/send-results';
-// Example: 'https://ei-assessment.vercel.app/api/send-results'
-// For local testing, you can use: 'http://localhost:3000/api/send-results'
+// API endpoint - uses relative path for automatic deployment compatibility
+const API_ENDPOINT = '/api/send-results';
 
 const sections = {
   "Self-Awareness": [
