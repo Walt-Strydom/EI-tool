@@ -37,6 +37,10 @@ module.exports = async (req, res) => {
       }
     });
 
+    const appBaseUrl = process.env.APP_BASE_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+    const emailLogoUrl = process.env.EMAIL_LOGO_URL || (appBaseUrl ? `${appBaseUrl}/logo.png` : '');
+
     // Build email subject
     const subject = `EI Assessment for ${name} - ${date}`;
 
@@ -76,6 +80,7 @@ module.exports = async (req, res) => {
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
     .container { max-width: 800px; margin: 0 auto; }
     .header { background: #3b82f6; color: white; padding: 30px 20px; text-align: center; }
+    .logo { max-width: 240px; width: 100%; height: auto; display: block; margin: 0 auto 12px; }
     .header h1 { margin: 0; font-size: 24px; }
     .content { padding: 30px 20px; background: #ffffff; }
     .info-box { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; }
@@ -101,6 +106,7 @@ module.exports = async (req, res) => {
 <body>
   <div class="container">
     <div class="header">
+      ${emailLogoUrl ? `<img class="logo" src="${escapeHtml(emailLogoUrl)}" alt="Crossover logo" />` : ''}
       <h1>🧠 Emotional Intelligence Assessment Results</h1>
     </div>
     

@@ -8,6 +8,7 @@
     :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
     body{max-width:900px;margin:28px auto;padding:20px;background:#fbfbfd;border:1px solid #eee;border-radius:10px;}
     h1{font-size:1.55rem;margin-bottom:6px}
+    .brand-logo{display:block;max-width:240px;width:100%;height:auto;margin:0 auto 12px}
     p.lead{color:#444;margin-top:0}
     .meta{display:flex;gap:12px;align-items:center;margin-bottom:14px}
     label{display:block;margin-bottom:6px;font-weight:600}
@@ -44,6 +45,7 @@
   </style>
 </head>
 <body>
+  <img class="brand-logo" src="/logo.png" alt="Crossover logo" />
   <h1>Emotional Intelligence Self-Assessment</h1>
   <p class="lead">Click an option with the mouse to select it. The assessment will advance automatically.</p>
 
@@ -328,7 +330,7 @@ downloadBtn.addEventListener('click', () => {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  URL.revokeObjectURL(url);<your-domain>/logo.png
 });
 
 restartBtn.addEventListener('click', () => {
