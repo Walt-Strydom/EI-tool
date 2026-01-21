@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Emotional Intelligence Self-Assessment</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{max-width:900px;margin:28px auto;padding:20px;background:#fbfbfd;border:1px solid #eee;border-radius:10px;}
+    h1{font-size:1.55rem;margin-bottom:6px}
+    p.lead{color:#444;margin-top:0}
+    .meta{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+    label{display:block;margin-bottom:6px;font-weight:600}
+    #questionCard{padding:18px;border-radius:10px;border:1px solid #e6e6f2;background:white;box-shadow:0 6px 18px rgba(20,20,60,0.03)}
+    .question-text{font-size:1.05rem;margin-bottom:12px}
+    .options{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .opt{padding:8px 12px;border-radius:999px;border:1px solid #ddd;cursor:pointer;user-select:none;transition:all 0.2s}
+    .opt:hover{border-color:#bfc8ff;background:#f8f9ff}
+    .opt input{display:none}
+    .opt.selected{background:#eef2ff;border-color:#bfc8ff}
+    .controls{display:flex;gap:8px;align-items:center;margin-top:10px}
+    button{padding:8px 12px;border-radius:8px;border:0;background:#3b82f6;color:white;cursor:pointer;transition:background 0.2s}
+    button:hover{background:#2563eb}
+    button.secondary{background:#6b7280}
+    button.secondary:hover{background:#4b5563}
+    .progress{height:10px;background:#f1f5f9;border-radius:999px;margin:12px 0;overflow:hidden}
+    .progress > i{display:block;height:100%;background:#60a5fa;width:0%;transition:width 0.3s}
+    .results{margin-top:18px;padding:14px;border-radius:10px;border:1px solid #e6eefc;background:#fbfdff}
+    table{width:100%;border-collapse:collapse}
+    td,th{padding:8px 6px;text-align:left;border-bottom:1px solid #f1f5f9}
+    th{background:#f9fafb;font-weight:600}
+    .small{font-size:0.9rem;color:#444}
+    footer{margin-top:20px;color:#666;font-size:0.9rem}
+    .email-status{margin-top:10px;padding:10px;border-radius:8px;font-size:0.9rem;animation:fadeIn 0.3s}
+    .email-status.success{background:#d1fae5;color:#065f46;border:1px solid #10b981;}
+    .email-status.error{background:#fee2e2;color:#991b1b;border:1px solid #ef4444;}
+    .email-status.sending{background:#dbeafe;color:#1e40af;border:1px solid #3b82f6;}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @media (max-width:520px){
+      body{padding:12px}
+      .meta{flex-direction:column;align-items:stretch}
+      .meta > div{width:100%!important}
+    }
+  </style>
+</head>
+<body>
+  <h1>Emotional Intelligence Self-Assessment</h1>
+  <p class="lead">Click an option with the mouse to select it. The assessment will advance automatically.</p>
+
+  <div class="meta">
+    <div style="flex:1">
+      <label for="participantName">Full name</label>
+      <input id="participantName" type="text" placeholder="Enter your full name" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd" />
+    </div>
+    <div style="width:200px">
+      <label>&nbsp;</label>
+      <button id="startBtn">Start Assessment</button>
+    </div>
+  </div>
+
+  <div id="assessmentArea" style="display:none">
+    <div id="questionCard">
+      <div class="small" id="qMeta">Question <span id="qIndex">0</span> of <span id="qTotal">0</span></div>
+      <div class="progress"><i id="progBar"></i></div>
+      <div class="question-text" id="questionText">Question will appear here</div>
+
+      <div class="options" id="options"></div>
+
+      <div class="controls">
+        <div style="margin-left:auto" class="small">Options: A=Always, U=Usually, S=Sometimes, O=Occasionally, R=Rarely</div>
+      </div>
+    </div>
+
+    <div id="results" class="results" style="display:none">
+      <h3>Assessment Complete</h3>
+      <div id="resultsContent"></div>
+      <div id="emailStatus"></div>
+      <div style="margin-top:10px">
+        <button id="printBtn">Print / Save as PDF</button>
+        <button id="downloadBtn">Download Results</button>
+        <button id="restartBtn" class="secondary">Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Results will be emailed automatically to the admin when completed.</footer>
+
+<script>
+// CONFIGURATION - Update this URL after deploying to Vercel
+const API_ENDPOINT = 'YOUR_VERCEL_URL/api/send-results';
+// Example: 'https://ei-assessment.vercel.app/api/send-results'
+// For local testing, you can use: 'http://localhost:3000/api/send-results'
+
+const sections = {
+  "Self-Awareness": [
+    "Do you know which emotions you are feeling and why?",
+    "Can you tell when your emotions are affecting your performance?",
+    "Can you tell when you are starting to lose your temper or when your thoughts are turning negative?",
+    "Do you have a guiding awareness of your values and goals?",
+    "Are you aware of your strengths and weaknesses?",
+    "Are you reflective, learning from experience?",
+    "Are you open to candid feedback, new perspectives, continuous learning and self-development?",
+    "Are you able to show a sense of humour and perspective about yourself?",
+    "Can you voice views that are unpopular and go out on a limb for what is right?",
+    "Are you decisive, able to make decisions despite uncertainties and pressures?"
+  ],
+  "Self-Regulation": [
+    "Do you manage your impulsive feelings and distressing emotions well?",
+    "Do you stay composed, positive and unflappable even in trying moments?",
+    "Do you think clearly and stay focused under pressure or when feeling anxious?",
+    "Do you build trust through your reliability, ethical behaviour and authenticity?",
+    "Do you admit your own mistakes and confront unethical actions in others?",
+    "Do you take tough, principled stands, even if they are unpopular?",
+    "Do you meet commitments and keep promises?",
+    "Do you smoothly handle multiple demands, shifting priorities and rapid change?",
+    "Are you flexible in how you see events?",
+    "Are you open to novel ideas and new information?"
+  ],
+  "Self-Motivation": [
+    "Do you bounce back quickly after a setback?",
+    "Can you kick-start yourself into action when appropriate?",
+    "Are you results-oriented, with a high drive to meet your objectives and standards?",
+    "Do you set challenging goals and take calculated risks?",
+    "Do you learn how to improve your performance?",
+    "Do you readily make personal or group sacrifices to meet a larger organisational goal?",
+    "Do you use the group's core values in making decisions and clarifying choices?",
+    "Are you ready to seize opportunities?",
+    "Do you pursue goals beyond what is required or expected of you?",
+    "Do you persist in seeking goals despite obstacles and setbacks?"
+  ],
+  "Social Awareness": [
+    "Are you attentive to emotional cues and listen well?",
+    "Do you show sensitivity and understand other's perspectives?",
+    "Do you seek ways to increase customers' satisfaction and loyalty?",
+    "Do you acknowledge and reward people's strengths, accomplishments and development?",
+    "Do you offer useful feedback and identify people's needs for development?",
+    "Do you respect and relate well to people from varied backgrounds?",
+    "Do you see diversity as an opportunity, creating an environment where diverse people can thrive?",
+    "Do you challenge bias and intolerance?",
+    "Do you accurately read key power relationships?",
+    "Do you detect crucial social networks?"
+  ],
+  "Relationship Management": [
+    "Are you able to raise morale and make others feel good?",
+    "Are you able to demonstrate empathy with others feelings?",
+    "Do you listen well, seek mutual understanding and welcome sharing of information fully?",
+    "Do you lead by example?",
+    "Do you recognise the need for change and remove barriers?",
+    "Do you handle difficult people and tense situations with diplomacy and tact?",
+    "Do you cultivate and maintain extensive informal networks?",
+    "Do you balance a focus on task with attention to relationships?",
+    "Do you promote a friendly, co-operative climate?",
+    "Do you model team qualities like respect, helpfulness and co-operation?"
+  ]
+};
+
+const scoreMap = { A:10, U:8, S:6, O:4, R:2 };
+const optionLabels = [
+  {key:'A', label:'Always'},
+  {key:'U', label:'Usually'},
+  {key:'S', label:'Sometimes'},
+  {key:'O', label:'Occasionally'},
+  {key:'R', label:'Rarely'}
+];
+
+let allQuestions = [];
+for (const sec of Object.keys(sections)) {
+  sections[sec].forEach(q => allQuestions.push({section:sec, text:q}));
+}
+
+function shuffleArray(a) {
+  for (let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+}
+
+const startBtn = document.getElementById('startBtn');
+const assessmentArea = document.getElementById('assessmentArea');
+const questionText = document.getElementById('questionText');
+const qIndexEl = document.getElementById('qIndex');
+const qTotalEl = document.getElementById('qTotal');
+const progBar = document.getElementById('progBar');
+const optionsDiv = document.getElementById('options');
+const resultsBox = document.getElementById('results');
+const resultsContent = document.getElementById('resultsContent');
+const participantNameInput = document.getElementById('participantName');
+const downloadBtn = document.getElementById('downloadBtn');
+const restartBtn = document.getElementById('restartBtn');
+const printBtn = document.getElementById('printBtn');
+const emailStatus = document.getElementById('emailStatus');
+
+let state = {order:[], answers:[], pos:0};
+
+startBtn.addEventListener('click', () => {
+  const nameVal = participantNameInput.value.trim();
+  if (!nameVal) {
+    alert('Please enter your full name before starting.');
+    return;
+  }
+  state.order = Array.from({length:allQuestions.length}, (_,i)=>i);
+  shuffleArray(state.order);
+  state.answers = Array(allQuestions.length).fill(null);
+  state.pos = 0;
+  qTotalEl.textContent = allQuestions.length;
+  assessmentArea.style.display = '';
+  showQuestion();
+});
+
+function showQuestion() {
+  const idx = state.order[state.pos];
+  const q = allQuestions[idx];
+  qIndexEl.textContent = state.pos + 1;
+  questionText.textContent = q.text;
+  progBar.style.width = (state.pos / allQuestions.length * 100) + '%';
+
+  optionsDiv.innerHTML = '';
+  optionLabels.forEach(opt => {
+    const div = document.createElement('div');
+    div.className = 'opt';
+    if (state.answers[state.pos] === opt.key) {
+      div.classList.add('selected');
+    }
+    div.innerHTML = `<span>${opt.key} - ${opt.label}</span>`;
+    div.addEventListener('click', () => selectOption(opt.key));
+    optionsDiv.appendChild(div);
+  });
+}
+
+function selectOption(key) {
+  state.answers[state.pos] = key;
+  setTimeout(() => {
+    state.pos++;
+    if (state.pos >= allQuestions.length) {
+      finishAssessment();
+    } else {
+      showQuestion();
+    }
+  }, 200);
+}
+
+async function finishAssessment() {
+  const sectionScores = {};
+  for (const s of Object.keys(sections)) {
+    sectionScores[s] = 0;
+  }
+  let total = 0;
+  state.order.forEach((qIndex, i) => {
+    const q = allQuestions[qIndex];
+    const ansKey = state.answers[i] || null;
+    const val = ansKey ? (scoreMap[ansKey] || 0) : 0;
+    sectionScores[q.section] = (sectionScores[q.section] || 0) + val;
+    total += val;
+  });
+
+  const name = participantNameInput.value.trim();
+  const today = new Date().toISOString().slice(0,10);
+  
+  let html = `<div class="small"><strong>Participant:</strong> ${escapeHtml(name)}</div>`;
+  html += '<table style="margin-top:8px">';
+  html += '<thead><tr><th>Section</th><th>Score (max 100)</th></tr></thead><tbody>';
+  for (const [section, score] of Object.entries(sectionScores)) {
+    html += `<tr><td>${escapeHtml(section)}</td><td>${score}/100</td></tr>`;
+  }
+  html += `</tbody></table>`;
+  html += `<div style="margin-top:10px"><strong>Total EI Score:</strong> ${total}/500</div>`;
+  resultsContent.innerHTML = html;
+  resultsBox.style.display = '';
+  progBar.style.width = '100%';
+
+  const payload = {
+    name: name,
+    date: today,
+    sectionScores: sectionScores,
+    total: total,
+    answers: state.answers.map((k,i)=>({
+      question: allQuestions[state.order[i]].text, 
+      section: allQuestions[state.order[i]].section, 
+      answer: k || 'No answer'
+    }))
+  };
+
+  emailStatus.innerHTML = '<div class="email-status sending">📧 Sending results via email...</div>';
+
+  try {
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      emailStatus.innerHTML = '<div class="email-status success">✓ Results sent successfully via email!</div>';
+    } else {
+      emailStatus.innerHTML = `<div class="email-status error">✗ Email failed: ${data.error || 'Unknown error'}</div>`;
+    }
+  } catch (err) {
+    emailStatus.innerHTML = `<div class="email-status error">✗ Email failed: ${err.message}. Please check your internet connection.</div>`;
+  }
+}
+
+downloadBtn.addEventListener('click', () => {
+  const name = participantNameInput.value.trim() || 'Participant';
+  const sectionScores = {};
+  for (const s of Object.keys(sections)) { sectionScores[s] = 0; }
+  let total = 0;
+  state.order.forEach((qIndex, i) => {
+    const q = allQuestions[qIndex];
+    const ansKey = state.answers[i] || null;
+    const val = ansKey ? (scoreMap[ansKey] || 0) : 0;
+    sectionScores[q.section] = (sectionScores[q.section] || 0) + val;
+    total += val;
+  });
+
+  let content = 'Emotional Intelligence Self-Assessment Results\n';
+  content += `Participant: ${name}\n\n`;
+  for (const [section, score] of Object.entries(sectionScores)) {
+    content += `${section} Score: ${score}/100\n`;
+  }
+  content += `\nTotal EI Score: ${total}/500\n`;
+
+  const filename = name.replace(/\s+/g,'_') + '_EI_Assessment.txt';
+  const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+restartBtn.addEventListener('click', () => {
+  assessmentArea.style.display = 'none';
+  resultsBox.style.display = 'none';
+  participantNameInput.value = '';
+  emailStatus.innerHTML = '';
+  state = {order:[],answers:[],pos:0};
+});
+
+printBtn.addEventListener('click', () => { window.print(); });
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"'`=\/]/g, function(s){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'}[s];
+  });
+}
+
+document.addEventListener('keydown', (e) => {
+  if (assessmentArea.style.display === 'none') return;
+  const key = e.key.toUpperCase();
+  if (['A','U','S','O','R','ArrowLeft','ArrowRight','Enter',' '].includes(key)) {
+    e.preventDefault();
+  }
+});
+</script>
+</body>
+</html>
